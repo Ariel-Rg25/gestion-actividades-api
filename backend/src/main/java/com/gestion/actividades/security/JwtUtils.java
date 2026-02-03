@@ -14,6 +14,7 @@ public class JwtUtils {
     private final SecretKey key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
     private final int jwtExpirationMs = 86400000; // 24 horas
 
+    
     public String generateToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
@@ -21,6 +22,8 @@ public class JwtUtils {
                 .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(key)
                 .compact();
+    }
+
     
     public String extractUsername(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build()
@@ -28,7 +31,7 @@ public class JwtUtils {
                 .getBody()
                 .getSubject();
     }
-    
+
     
     public boolean validateToken(String token) {
         try {
@@ -37,6 +40,5 @@ public class JwtUtils {
         } catch (Exception e) {
             return false;
         }
-    }
     }
 }
