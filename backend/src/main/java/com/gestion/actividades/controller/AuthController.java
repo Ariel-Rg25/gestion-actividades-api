@@ -1,5 +1,6 @@
 package com.gestion.actividades.controller;
 
+import org.springframework.web.bind.annotation.CrossOrigin;
 import com.gestion.actividades.model.Usuario;
 import com.gestion.actividades.repository.UsuarioRepository;
 import com.gestion.actividades.security.JwtUtils;
@@ -11,6 +12,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "*")
 public class AuthController {
 
     @Autowired

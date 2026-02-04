@@ -1,5 +1,6 @@
 package com.gestion.actividades.controller;
 
+import org.springframework.web.bind.annotation.CrossOrigin;
 import com.gestion.actividades.model.Proyecto;
 import com.gestion.actividades.service.ProyectoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/projects")
+@CrossOrigin(origins = "*")
 public class ProyectoController {
 
     @Autowired
