@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión Completa</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <nav class="navbar navbar-dark bg-dark px-3">
+        <span class="navbar-brand mb-0 h1">Gestión de Actividades</span>
+        <button class="btn btn-outline-light btn-sm" onclick="logout()">Cerrar Sesión</button>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+            <div>
+                <h2 class="mb-0">Mis Proyectos</h2>
+                <p class="mb-0 text-muted small">Bienvenido, <b id="user-display"></b></p>
+            </div>
+            <div>
+                <button class="btn btn-danger" onclick="descargarPDF()">
+                    📄 Descargar PDF
+                </button>
+            </div>
+        </div>
+
+        <div id="lista-proyectos" class="row mt-3">
+            <div class="col-12 text-center">Cargando proyectos...</div>
+        </div>
+    </div>
+
+    <script>
+        
+        const token = localStorage.getItem('jwt_token');
+        if (!token) window.location.href = 'index.html';
+        document.getElementById('user-display').innerText = localStorage.getItem('username');
+
+        
+        async function cargarProyectos() {
+            try {
+                const response = await fetch('http://localhost:8080/api/projects', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (response.ok) {
+                    const proyectos = await response.json();
+                    renderizarProyectos(proyectos);
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        
+        function renderizarProyectos(proyectos) {
+            const contenedor = document.getElementById('lista-proyectos');
+            contenedor.innerHTML = '';
+
+            if(proyectos.length === 0) {
+                contenedor.innerHTML = '<div class="alert alert-info">No hay proyectos.</div>';
+                return;
+            }
+
+            proyectos.forEach(proj => {
+                const card = `
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm border-start border-5 border-primary">
+                        <div class="card-body">
+                            <h5 class="card-title d-flex justify-content-between">
+                                ${proj.titulo}
+                                <span class="badge bg-primary">${proj.estado}</span>
+                            </h5>
+                            <p class="card-text text-muted">${proj.descripcion}</p>
+                            
+                            <button class="btn btn-sm btn-outline-secondary w-100" onclick="cargarTareas(${proj.id}, this)">
+                                Ver Tareas 🔽
+                            </button>
+                            
+                            <div id="tareas-proj-${proj.id}" class="mt-3"></div>
+                        </div>
+                    </div>
+                </div>`;
+                contenedor.innerHTML += card;
+            });
+        }
+
+        
+        async function cargarTareas(proyectoId, btn) {
+            const contenedorTareas = document.getElementById(`tareas-proj-${proyectoId}`);
+            
+            
+            if (contenedorTareas.innerHTML !== '') {
+                contenedorTareas.innerHTML = '';
+                btn.innerText = 'Ver Tareas 🔽';
+                return;
+            }
+
+            btn.innerText = 'Cargando...';
+
+            try {
+                const response = await fetch(`http://localhost:8080/api/projects/${proyectoId}/tasks`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const tareas = await response.json();
+
+                btn.innerText = 'Ocultar Tareas 🔼';
+                
+                if (tareas.length === 0) {
+                    contenedorTareas.innerHTML = '<p class="small text-muted text-center">Sin tareas asignadas</p>';
+                } else {
+                    let htmlTareas = '<ul class="list-group list-group-flush small">';
+                    tareas.forEach(tarea => {
+                        htmlTareas += `
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-light">
+                            <div>
+                                <strong>${tarea.titulo}</strong> <br>
+                                <span class="text-muted" style="font-size: 0.8em">${tarea.descripcion}</span>
+                            </div>
+                            <span class="badge bg-secondary rounded-pill">${tarea.estado}</span>
+                        </li>`;
+                    });
+                    htmlTareas += '</ul>';
+                    contenedorTareas.innerHTML = htmlTareas;
+                }
+
+            } catch (error) {
+                console.error(error);
+                btn.innerText = 'Error al cargar';
+            }
+        }
+
+        async function descargarPDF() {
+            try {
+                const response = await fetch('http://localhost:8080/api/reports/download', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = "Mis_Proyectos.pdf";
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                } else {
+                    alert("Error al generar el reporte");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("No se pudo conectar con el servidor");
+            }
+        }
+
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+        
+        // Iniciar carga
+        cargarProyectos();
+    </script>
+</body>
+</html>
