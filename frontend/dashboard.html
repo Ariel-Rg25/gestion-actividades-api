@@ -2,162 +2,397 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Gestión Completa</title>
+    <title>Gestión Total - Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        .card-project { transition: transform 0.2s; }
+        .card-project:hover { transform: translateY(-5px); }
+        .subtask-container { border-left: 3px solid #6c757d; margin-left: 20px; padding-left: 10px; }
+    </style>
 </head>
-<body>
+<body class="bg-light">
 
-    <nav class="navbar navbar-dark bg-dark px-3">
-        <span class="navbar-brand mb-0 h1">Gestión de Actividades</span>
-        <button class="btn btn-outline-light btn-sm" onclick="logout()">Cerrar Sesión</button>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
+        <a class="navbar-brand" href="#">Gestión de Actividades</a>
+        <div class="collapse navbar-collapse justify-content-end">
+            <button class="btn btn-outline-info btn-sm me-2" onclick="abrirModalUsuarios()"> Usuarios</button>
+            <button class="btn btn-outline-light btn-sm" onclick="logout()">Cerrar Sesión</button>
+        </div>
     </nav>
 
     <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+        <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="mb-0">Mis Proyectos</h2>
-                <p class="mb-0 text-muted small">Bienvenido, <b id="user-display"></b></p>
+                <h2>Panel de Control</h2>
+                <p class="text-muted">Bienvenido, <b id="user-display"></b></p>
             </div>
             <div>
-                <button class="btn btn-danger" onclick="descargarPDF()">
-                    📄 Descargar PDF
-                </button>
+                <button class="btn btn-success me-2" onclick="abrirModalProyecto()">+ Nuevo Proyecto</button>
+                <button class="btn btn-danger" onclick="descargarPDF()"> PDF</button>
             </div>
         </div>
 
-        <div id="lista-proyectos" class="row mt-3">
-            <div class="col-12 text-center">Cargando proyectos...</div>
+        <div id="lista-proyectos" class="row">
+            <div class="col-12 text-center text-muted">Cargando datos...</div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalUsuarios" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Gestión de Usuarios</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-usuario" class="mb-3 input-group">
+                        <input type="text" id="new-username" class="form-control" placeholder="Nuevo Usuario (username)" required>
+                        <input type="email" id="new-email" class="form-control" placeholder="Email" required>
+                        <button type="submit" class="btn btn-primary">Crear</button>
+                    </form>
+                    <hr>
+                    <h6>Lista de Usuarios:</h6>
+                    <ul id="lista-usuarios-ul" class="list-group list-group-flush small"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalProyecto" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tituloModalProyecto">Nuevo Proyecto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-proyecto">
+                        <input type="hidden" id="proj-id">
+                        <div class="mb-2">
+                            <label>Título</label>
+                            <input type="text" id="proj-titulo" class="form-control" required>
+                        </div>
+                        <div class="mb-2">
+                            <label>Descripción</label>
+                            <textarea id="proj-desc" class="form-control"></textarea>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col">
+                                <label>Estado</label>
+                                <select id="proj-estado" class="form-select">
+                                    <option value="PENDIENTE">PENDIENTE</option>
+                                    <option value="EN_CURSO">EN_CURSO</option>
+                                    <option value="FINALIZADA">FINALIZADA</option>
+                                </select>
+                            </div>
+                            <div class="col">
+                                <label>Prioridad</label>
+                                <select id="proj-prioridad" class="form-select">
+                                    <option value="ALTA">ALTA</option>
+                                    <option value="MEDIA">MEDIA</option>
+                                    <option value="BAJA">BAJA</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label>Fecha Inicio</label>
+                            <input type="datetime-local" id="proj-fecha" class="form-control">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Guardar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalTarea" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nueva Tarea</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-tarea">
+                        <input type="hidden" id="task-project-id"> <div class="mb-2"><input type="text" id="task-titulo" class="form-control" placeholder="Título Tarea" required></div>
+                        <div class="mb-2"><textarea id="task-desc" class="form-control" placeholder="Descripción"></textarea></div>
+                        <div class="row mb-2">
+                            <div class="col"><select id="task-estado" class="form-select"><option value="PENDIENTE">PENDIENTE</option><option value="EN_CURSO">EN_CURSO</option></select></div>
+                            <div class="col"><select id="task-prioridad" class="form-select"><option value="MEDIA">MEDIA</option><option value="ALTA">ALTA</option></select></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Guardar Tarea</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalSubtarea" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nueva Subtarea</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-subtarea">
+                        <input type="hidden" id="sub-task-id"> <div class="mb-2"><input type="text" id="sub-titulo" class="form-control" placeholder="Título" required></div>
+                        <button type="submit" class="btn btn-primary w-100">Guardar</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        
+        const API_URL = "http://localhost:8080/api";
         const token = localStorage.getItem('jwt_token');
+        const username = localStorage.getItem('username');
+        
+        // Inicialización
         if (!token) window.location.href = 'index.html';
-        document.getElementById('user-display').innerText = localStorage.getItem('username');
-
+        document.getElementById('user-display').innerText = username;
         
+       
+        
+        const currentUserId = 1; 
+
+       
+
         async function cargarProyectos() {
-            try {
-                const response = await fetch('http://localhost:8080/api/projects', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                if (response.ok) {
-                    const proyectos = await response.json();
-                    renderizarProyectos(proyectos);
-                }
-            } catch (error) { console.error(error); }
-        }
-
-        
-        function renderizarProyectos(proyectos) {
-            const contenedor = document.getElementById('lista-proyectos');
-            contenedor.innerHTML = '';
-
-            if(proyectos.length === 0) {
-                contenedor.innerHTML = '<div class="alert alert-info">No hay proyectos.</div>';
-                return;
-            }
-
-            proyectos.forEach(proj => {
-                const card = `
+            const res = await fetch(`${API_URL}/projects`, { headers: { 'Authorization': 'Bearer ' + token } });
+            const data = await res.json();
+            const div = document.getElementById('lista-proyectos');
+            div.innerHTML = '';
+            
+            data.forEach(p => {
+                div.innerHTML += `
                 <div class="col-md-6 mb-4">
-                    <div class="card h-100 shadow-sm border-start border-5 border-primary">
+                    <div class="card card-project h-100 shadow-sm border-start border-5 border-primary">
                         <div class="card-body">
-                            <h5 class="card-title d-flex justify-content-between">
-                                ${proj.titulo}
-                                <span class="badge bg-primary">${proj.estado}</span>
-                            </h5>
-                            <p class="card-text text-muted">${proj.descripcion}</p>
+                            <div class="d-flex justify-content-between">
+                                <h5 class="card-title">${p.titulo}</h5>
+                                <div>
+                                    <span class="badge bg-primary">${p.estado}</span>
+                                    <button class="btn btn-sm btn-outline-warning" onclick='editarProyecto(${JSON.stringify(p)})'></button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="eliminarProyecto(${p.id})"></button>
+                                </div>
+                            </div>
+                            <p class="text-muted small">${p.descripcion || ''}</p>
+                            <p class="text-muted small"> ${p.fechaInicio ? p.fechaInicio.split('T')[0] : 'N/A'}</p>
                             
-                            <button class="btn btn-sm btn-outline-secondary w-100" onclick="cargarTareas(${proj.id}, this)">
-                                Ver Tareas 🔽
-                            </button>
-                            
-                            <div id="tareas-proj-${proj.id}" class="mt-3"></div>
+                            <hr>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong class="small">Tareas:</strong>
+                                <button class="btn btn-sm btn-link p-0" onclick="abrirModalTarea(${p.id})">+ Agregar Tarea</button>
+                            </div>
+                            <div id="tareas-proj-${p.id}">
+                                <button class="btn btn-sm btn-light w-100" onclick="cargarTareas(${p.id}, this)">Ver Tareas </button>
+                            </div>
                         </div>
                     </div>
                 </div>`;
-                contenedor.innerHTML += card;
             });
         }
 
         
-        async function cargarTareas(proyectoId, btn) {
-            const contenedorTareas = document.getElementById(`tareas-proj-${proyectoId}`);
+        document.getElementById('form-proyecto').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('proj-id').value;
+            const metodo = id ? 'PUT' : 'POST';
+            const url = id ? `${API_URL}/projects/${id}` : `${API_URL}/projects`;
+
+            const body = {
+                titulo: document.getElementById('proj-titulo').value,
+                descripcion: document.getElementById('proj-desc').value,
+                estado: document.getElementById('proj-estado').value,
+                prioridad: document.getElementById('proj-prioridad').value,
+                fechaInicio: document.getElementById('proj-fecha').value || null,
+                usuario: { id: currentUserId } 
+            };
+
+            await fetch(url, {
+                method: metodo,
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify(body)
+            });
             
-            
-            if (contenedorTareas.innerHTML !== '') {
-                contenedorTareas.innerHTML = '';
-                btn.innerText = 'Ver Tareas 🔽';
-                return;
-            }
+            bootstrap.Modal.getInstance(document.getElementById('modalProyecto')).hide();
+            cargarProyectos();
+        });
 
-            btn.innerText = 'Cargando...';
-
-            try {
-                const response = await fetch(`http://localhost:8080/api/projects/${proyectoId}/tasks`, {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                const tareas = await response.json();
-
-                btn.innerText = 'Ocultar Tareas 🔼';
-                
-                if (tareas.length === 0) {
-                    contenedorTareas.innerHTML = '<p class="small text-muted text-center">Sin tareas asignadas</p>';
-                } else {
-                    let htmlTareas = '<ul class="list-group list-group-flush small">';
-                    tareas.forEach(tarea => {
-                        htmlTareas += `
-                        <li class="list-group-item d-flex justify-content-between align-items-center bg-light">
-                            <div>
-                                <strong>${tarea.titulo}</strong> <br>
-                                <span class="text-muted" style="font-size: 0.8em">${tarea.descripcion}</span>
-                            </div>
-                            <span class="badge bg-secondary rounded-pill">${tarea.estado}</span>
-                        </li>`;
-                    });
-                    htmlTareas += '</ul>';
-                    contenedorTareas.innerHTML = htmlTareas;
-                }
-
-            } catch (error) {
-                console.error(error);
-                btn.innerText = 'Error al cargar';
-            }
+        async function eliminarProyecto(id) {
+            if(!confirm('¿Seguro que quieres eliminar este proyecto?')) return;
+            await fetch(`${API_URL}/projects/${id}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+            cargarProyectos();
         }
 
+        function abrirModalProyecto() {
+            document.getElementById('form-proyecto').reset();
+            document.getElementById('proj-id').value = '';
+            document.getElementById('tituloModalProyecto').innerText = 'Nuevo Proyecto';
+            new bootstrap.Modal(document.getElementById('modalProyecto')).show();
+        }
+
+        function editarProyecto(p) {
+            document.getElementById('proj-id').value = p.id;
+            document.getElementById('proj-titulo').value = p.titulo;
+            document.getElementById('proj-desc').value = p.descripcion;
+            document.getElementById('proj-estado').value = p.estado;
+            document.getElementById('proj-prioridad').value = p.prioridad;
+            document.getElementById('tituloModalProyecto').innerText = 'Editar Proyecto';
+            new bootstrap.Modal(document.getElementById('modalProyecto')).show();
+        }
+
+        
+
+        async function cargarTareas(projId, btn) {
+            const res = await fetch(`${API_URL}/projects/${projId}/tasks`, { headers: { 'Authorization': 'Bearer ' + token } });
+            const tareas = await res.json();
+            const container = document.getElementById(`tareas-proj-${projId}`);
+            
+            let html = '<ul class="list-group list-group-flush small">';
+            tareas.forEach(t => {
+                html += `
+                <li class="list-group-item bg-light">
+                    <div class="d-flex justify-content-between">
+                        <strong>${t.titulo}</strong>
+                        <span class="badge bg-secondary">${t.estado}</span>
+                    </div>
+                    <div class="d-flex justify-content-end mt-1">
+                        <button class="btn btn-xs btn-link p-0" style="font-size:0.8em" onclick="abrirModalSubtarea(${t.id})">+ Subtarea</button>
+                        <button class="btn btn-xs btn-link p-0 ms-2" style="font-size:0.8em" onclick="cargarSubtareas(${t.id}, this)">Ver Subs </button>
+                    </div>
+                    <div id="subtareas-task-${t.id}" class="subtask-container mt-1"></div>
+                </li>`;
+            });
+            html += '</ul>';
+            container.innerHTML = html;
+        }
+
+        function abrirModalTarea(projId) {
+            document.getElementById('form-tarea').reset();
+            document.getElementById('task-project-id').value = projId;
+            new bootstrap.Modal(document.getElementById('modalTarea')).show();
+        }
+
+        document.getElementById('form-tarea').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const projId = document.getElementById('task-project-id').value;
+            const body = {
+                titulo: document.getElementById('task-titulo').value,
+                descripcion: document.getElementById('task-desc').value,
+                estado: document.getElementById('task-estado').value,
+                prioridad: document.getElementById('task-prioridad').value,
+                usuario: { id: currentUserId }
+            };
+            await fetch(`${API_URL}/projects/${projId}/tasks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify(body)
+            });
+            bootstrap.Modal.getInstance(document.getElementById('modalTarea')).hide();
+            
+            cargarProyectos(); 
+        });
+
+        
+
+        async function cargarSubtareas(taskId, btn) {
+            const res = await fetch(`${API_URL}/tasks/${taskId}/subtasks`, { headers: { 'Authorization': 'Bearer ' + token } });
+            const subs = await res.json();
+            const div = document.getElementById(`subtareas-task-${taskId}`);
+            
+            if(subs.length === 0) { div.innerHTML = '<span class="text-muted fst-italic">Sin subtareas</span>'; return; }
+
+            let html = '';
+            subs.forEach(s => {
+                html += `<div class="d-flex justify-content-between border-bottom py-1">
+                            <span>- ${s.titulo}</span>
+                            <span class="badge bg-light text-dark border">${s.estado}</span>
+                         </div>`;
+            });
+            div.innerHTML = html;
+            btn.innerText = 'Ocultar ';
+            btn.onclick = function() { div.innerHTML=''; btn.innerText='Ver Subs '; btn.onclick=function(){cargarSubtareas(taskId, btn)} };
+        }
+
+        function abrirModalSubtarea(taskId) {
+            document.getElementById('form-subtarea').reset();
+            document.getElementById('sub-task-id').value = taskId;
+            new bootstrap.Modal(document.getElementById('modalSubtarea')).show();
+        }
+
+        document.getElementById('form-subtarea').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const taskId = document.getElementById('sub-task-id').value;
+            const body = {
+                titulo: document.getElementById('sub-titulo').value,
+                estado: "PENDIENTE", prioridad: "MEDIA", 
+                usuario: { id: currentUserId }
+            };
+            await fetch(`${API_URL}/tasks/${taskId}/subtasks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify(body)
+            });
+            bootstrap.Modal.getInstance(document.getElementById('modalSubtarea')).hide();
+            alert("Subtarea creada. Vuelve a desplegar las subtareas para verla.");
+        });
+
+        
+
+        function abrirModalUsuarios() {
+            cargarListaUsuarios();
+            new bootstrap.Modal(document.getElementById('modalUsuarios')).show();
+        }
+
+        async function cargarListaUsuarios() {
+            const res = await fetch(`${API_URL}/users`, { headers: { 'Authorization': 'Bearer ' + token } });
+            const users = await res.json();
+            const ul = document.getElementById('lista-usuarios-ul');
+            ul.innerHTML = '';
+            users.forEach(u => {
+                ul.innerHTML += `<li class="list-group-item d-flex justify-content-between">
+                                    <span>${u.username} (${u.email || 'No email'})</span>
+                                    <span class="badge bg-info text-dark">ID: ${u.id}</span>
+                                 </li>`;
+            });
+        }
+
+        document.getElementById('form-usuario').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const body = {
+                username: document.getElementById('new-username').value,
+                email: document.getElementById('new-email').value
+            };
+            await fetch(`${API_URL}/users`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify(body)
+            });
+            document.getElementById('form-usuario').reset();
+            cargarListaUsuarios();
+        });
+
+        
+        
         async function descargarPDF() {
             try {
-                const response = await fetch('http://localhost:8080/api/reports/download', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': 'Bearer ' + token
-                    }
-                });
-
-                if (response.ok) {
-                    const blob = await response.blob();
+                const res = await fetch(`${API_URL}/reports/download`, { headers: { 'Authorization': 'Bearer ' + token } });
+                if(res.ok) {
+                    const blob = await res.blob();
                     const url = window.URL.createObjectURL(blob);
-                    
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = "Mis_Proyectos.pdf";
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                } else {
-                    alert("Error al generar el reporte");
-                }
-            } catch (error) {
-                console.error("Error:", error);
-                alert("No se pudo conectar con el servidor");
-            }
+                    const a = document.createElement('a'); a.href = url; a.download = "Reporte.pdf";
+                    document.body.appendChild(a); a.click(); a.remove();
+                } else alert("Error al descargar PDF");
+            } catch(e) { console.error(e); }
         }
 
         function logout() { localStorage.clear(); window.location.href = 'index.html'; }
-        
-        // Iniciar carga
+
+        // Carga inicial
         cargarProyectos();
     </script>
 </body>
